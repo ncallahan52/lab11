@@ -9,20 +9,24 @@ class Initial(Operator):
             return text
 
         words = text.split()
-        initials_parts = []
+        results = []
 
         for word in words:
-            first_char = None
+            prefix = ""
+            first_alnum = None
+
             for ch in word:
-                if ch.isalnum():
-                    first_char = ch.upper()
+                if first_alnum is None and ch.isalnum():
+                    first_alnum = ch.upper()
                     break
+                prefix += ch
 
-            if first_char:
-                initials_parts.append(f"{first_char}.")
+            if first_alnum:
+                results.append(f"{prefix}{first_alnum}.")
+            else:
+                results.append(prefix)
 
-        return " ".join(initials_parts)
-
+        return " ".join(results)
 
     def validate(self, params: Dict = None) -> None:
         pass
