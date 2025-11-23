@@ -202,3 +202,41 @@ docker-compose up -d
 
 Follow the [API Spec](https://microsoft.github.io/presidio/api-docs/api-docs.html#tag/Anonymizer) for the
 Anonymizer REST API reference details
+
+### Debugging Answers
+
+1. Identify how many if/elif branches the factory uses to select the operator.
+    - It doesn't use if/elif branches, it uses "if not" for validation checks, otherwise it uses a dictionary lookup.
+    - So, the number is zero.
+
+2. Identify the exact Python data structure used to select operators.
+    - It uses a dictionary that maps operator names (redact, replace, or our new one, initial) to their respective operator classes.
+    - Lines from code:
+    operators_dict = {
+        operator().operator_name(): operator
+        for operator in operators
+    }
+
+3. Explain how this demonstrates the Strategy design pattern.
+    a.
+    - Each operator has its own strategy, like Hash, Replace, Redact, Mask, and now, Initial. 
+    - They all have a unique anonymization method, and all inherit from the Operator class, which gives us the methods:
+        operate()
+        validate()
+        operator_name()
+        operator_type()
+    
+    b.
+    - All of the strartegies have a common interface, example from code:
+        class Operator(ABC):
+            @abstractmethod
+            def operate(self, text: str, params: Dict = None) -> str:
+                pass
+    
+    c.
+    - The engine can switch strategies at runtime, because of this, the factory can load the correct class without if/else chains, instead specifying strategies by name.
+        operator = operators_by_type.get(operator_name)
+    This line ^ is exactly what the the strategy design patttern requires. 
+
+    d.
+    - Because of all this, adding a new strategy is much easier than it would be otherwise, you just have to implement a class that inherits Operator, and register it in the operators factory. 
